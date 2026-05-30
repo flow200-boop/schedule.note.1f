@@ -50,6 +50,7 @@ const todayBadge = $('today-badge');
 
 // ===== Todos DOM =====
 const todoInput = $('todo-input');
+const todoDate = $('todo-date');
 const addTodoBtn = $('add-todo-btn');
 const todoList = $('todo-list');
 const todoFilters = $('todo-filters');
@@ -115,6 +116,9 @@ function init() {
   document.querySelectorAll('.nav-btn').forEach(btn => {
     btn.addEventListener('click', () => switchTab(btn.dataset.tab));
   });
+
+  // Set default todo date to today
+  todoDate.value = formatDateInput(new Date());
 
   // Todos event listeners
   addTodoBtn.addEventListener('click', addTodo);
@@ -201,6 +205,7 @@ function getNotesForDate(dateStr) {
 function getDatesWithNotes() {
   const set = new Set();
   notes.forEach(n => set.add(n.date));
+  todos.forEach(t => set.add(t.date));
   return set;
 }
 
@@ -290,6 +295,16 @@ function saveNote() {
 
 // ===== Todos: CRUD =====
 
+function getTodosForDate(dateStr) {
+  return todos.filter(t => t.date === dateStr);
+}
+
+function getDatesWithTodos() {
+  const set = new Set();
+  todos.forEach(t => set.add(t.date));
+  return set;
+}
+
 function loadTodos() {
   try {
     const stored = localStorage.getItem('notes_app_todos');
@@ -307,9 +322,12 @@ function addTodo() {
   const text = todoInput.value.trim();
   if (!text) return;
 
+  const date = todoDate.value || formatDateInput(new Date());
+
   const todo = {
     id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5),
     text: text,
+    date: date,
     completed: false,
     createdAt: new Date().toISOString()
   };
@@ -319,6 +337,8 @@ function addTodo() {
   todoInput.value = '';
   todoInput.focus();
   renderTodos();
+  renderMonth();
+  renderYearView();
 }
 
 function toggleTodo(id) {
@@ -327,12 +347,18 @@ function toggleTodo(id) {
   todo.completed = !todo.completed;
   saveTodosToStorage();
   renderTodos();
+  renderMonth();
+  renderYearView();
+  if (selectedDate) showDayDetail(selectedDate);
 }
 
 function deleteTodo(id) {
   todos = todos.filter(t => t.id !== id);
   saveTodosToStorage();
   renderTodos();
+  renderMonth();
+  renderYearView();
+  if (selectedDate) showDayDetail(selectedDate);
 }
 
 function clearCompleted() {
@@ -342,6 +368,9 @@ function clearCompleted() {
   todos = todos.filter(t => !t.completed);
   saveTodosToStorage();
   renderTodos();
+  renderMonth();
+  renderYearView();
+  if (selectedDate) showDayDetail(selectedDate);
 }
 
 function getFilteredTodos() {
@@ -366,6 +395,7 @@ function renderTodos() {
         <input type="checkbox" class="todo-checkbox" ${todo.completed ? 'checked' : ''}
                onchange="toggleTodo('${todo.id}')" />
         <span class="todo-text ${todo.completed ? 'completed' : ''}">${escapeHtml(todo.text)}</span>
+        <span class="todo-date-label">${formatDateDisplay(todo.date)}</span>
         <button class="todo-delete-btn" onclick="deleteTodo('${todo.id}')" title="Delete">✕</button>
       </div>
     `).join('');
@@ -560,34 +590,67 @@ function switchToMonth(month) {
 
 function showDayDetail(dateStr) {
   const dateNotes = getNotesForDate(dateStr);
+  const dateTodos = getTodosForDate(dateStr);
   const dateObj = new Date(dateStr + 'T12:00:00');
   const display = dateObj.toLocaleDateString('en-US', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
   });
   dayDetailDate.textContent = `📅 ${display}`;
 
+  // Remove any existing buttons before adding new ones (to avoid duplicates)
+  document.querySelectorAll('.day-detail-action-btn').forEach(el => el.remove());
 
-  // Remove any existing add-btn before adding a new one (to avoid duplicates)
-  const oldBtn = document.querySelector('.day-detail-add-btn');
-  if (oldBtn) oldBtn.remove();
-  const addBtn = document.createElement('button');
-  addBtn.className = 'btn btn-primary day-detail-add-btn';
-  addBtn.textContent = '+ Note';
-  addBtn.style.fontSize = '0.75rem';
-  addBtn.style.padding = '4px 10px';
-  addBtn.onclick = (e) => { e.stopPropagation(); openModal(); };
-  dayDetailDate.parentNode.appendChild(addBtn);
+  // + Note button
+  const addNoteBtn = document.createElement('button');
+  addNoteBtn.className = 'btn btn-primary day-detail-action-btn';
+  addNoteBtn.textContent = '+ Note';
+  addNoteBtn.style.fontSize = '0.75rem';
+  addNoteBtn.style.padding = '4px 10px';
+  addNoteBtn.onclick = (e) => { e.stopPropagation(); openModal(); };
+  dayDetailDate.parentNode.appendChild(addNoteBtn);
 
-  if (dateNotes.length === 0) {
-    dayDetailNotes.innerHTML = '<p class="empty-state">No notes for this day. <a href="#" onclick="event.preventDefault(); openModal()" style="color:var(--accent);text-decoration:underline;">Add one</a></p>';
-  } else {
-    dayDetailNotes.innerHTML = dateNotes.map(n => `
+  // + Task button
+  const addTodoBtn = document.createElement('button');
+  addTodoBtn.className = 'btn btn-secondary day-detail-action-btn';
+  addTodoBtn.textContent = '+ Task';
+  addTodoBtn.style.fontSize = '0.75rem';
+  addTodoBtn.style.padding = '4px 10px';
+  addTodoBtn.style.marginLeft = '6px';
+  addTodoBtn.onclick = (e) => {
+    e.stopPropagation();
+    switchTab('todos');
+    todoDate.value = dateStr;
+    todoInput.focus();
+  };
+  dayDetailDate.parentNode.appendChild(addTodoBtn);
+  let html = '';
+
+  // Notes section
+  if (dateNotes.length > 0) {
+    html += `<div class="day-detail-section-title">📌 Notes</div>`;
+    html += dateNotes.map(n => `
       <div class="day-detail-note">
         <div class="day-detail-note-title">${escapeHtml(n.title)}</div>
         <div class="day-detail-note-content">${escapeHtml(n.content)}</div>
       </div>
     `).join('');
   }
+
+  // Todos section
+  if (dateTodos.length > 0) {
+    html += `<div class="day-detail-section-title" style="margin-top:${dateNotes.length > 0 ? '10' : '0'}px;">✅ Tasks</div>`;
+    html += dateTodos.map(t => `
+      <div class="day-detail-note">
+        <div class="day-detail-note-content" style="${t.completed ? 'text-decoration:line-through;color:var(--text-muted)' : ''}">${escapeHtml(t.text)}</div>
+      </div>
+    `).join('');
+  }
+
+  if (!html) {
+    html = '<p class="empty-state">Nothing for this day. <a href="#" onclick="event.preventDefault(); openModal()" style="color:var(--accent);text-decoration:underline;">Add a note</a> or <a href="#" onclick="event.preventDefault(); switchTab(\'todos\'); todoInput.focus();" style="color:var(--accent);text-decoration:underline;">add a task</a></p>';
+  }
+
+  dayDetailNotes.innerHTML = html;
 
   dayDetail.classList.remove('hidden');
 }
