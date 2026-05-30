@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Notes & Calendar</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Stash</title>
   <link rel="stylesheet" href="style.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
@@ -12,106 +12,107 @@
     <!-- Header -->
     <header class="app-header">
       <div class="header-left">
-        <h1 class="app-title">📝 Notes &amp; Calendar</h1>
+        <h1 class="app-title">Stash</h1>
       </div>
       <div class="header-right">
         <div class="date-badge" id="today-badge"></div>
       </div>
     </header>
 
-    <!-- Main Layout -->
-    <main class="main-grid">
-      <!-- ===== Notes Panel ===== -->
-      <section class="panel notes-panel">
-        <div class="panel-header">
-          <h2 class="panel-title">📌 Notes</h2>
-          <button class="btn btn-primary" id="add-note-btn" title="Add a new note">+ New Note</button>
-        </div>
+    <!-- Tab Content Area -->
+    <main class="tab-content">
 
-        <div class="notes-search">
-          <input type="text" id="notes-search" placeholder="Search notes..." />
-        </div>
-
-        <div class="notes-list" id="notes-list">
-          <!-- Notes rendered by JS -->
+      <!-- ===== Notes Tab ===== -->
+      <section class="tab-panel active" id="tab-notes">
+        <div class="panel">
+          <div class="panel-header">
+            <h2 class="panel-title">📌 Notes</h2>
+            <button class="btn btn-primary" id="add-note-btn">+ New Note</button>
+          </div>
+          <div class="notes-search">
+            <input type="text" id="notes-search" placeholder="Search notes..." />
+          </div>
+          <div class="notes-list" id="notes-list"></div>
         </div>
       </section>
 
-      <!-- ===== Todos Panel ===== -->
-      <section class="panel todos-panel">
-        <div class="panel-header">
-          <h2 class="panel-title">✅ Todos</h2>
-          <div class="todo-filters" id="todo-filters">
-            <button class="btn btn-toggle active" data-filter="all">All</button>
-            <button class="btn btn-toggle" data-filter="active">Active</button>
-            <button class="btn btn-toggle" data-filter="completed">Done</button>
+      <!-- ===== Todos Tab ===== -->
+      <section class="tab-panel" id="tab-todos">
+        <div class="panel">
+          <div class="panel-header">
+            <h2 class="panel-title">✅ Todos</h2>
+            <div class="todo-filters" id="todo-filters">
+              <button class="btn btn-toggle active" data-filter="all">All</button>
+              <button class="btn btn-toggle" data-filter="active">Active</button>
+              <button class="btn btn-toggle" data-filter="completed">Done</button>
+            </div>
           </div>
-        </div>
-
-        <div class="todo-input-area">
-          <input type="text" id="todo-input" placeholder="Add a task... press Enter" />
-          <button class="btn btn-primary" id="add-todo-btn">Add</button>
-        </div>
-
-        <div class="todo-list" id="todo-list">
-          <!-- Todos rendered by JS -->
-        </div>
-
-        <div class="todo-footer" id="todo-footer">
-          <span class="todo-stats" id="todo-stats">0 tasks</span>
-          <button class="btn btn-danger" id="clear-completed-btn">Clear done</button>
-        </div>
-      </section>
-
-      <!-- ===== Calendar Panel ===== -->
-      <section class="panel calendar-panel">
-        <div class="panel-header">
-          <h2 class="panel-title">📅 Calendar</h2>
-          <div class="calendar-view-toggle">
-            <button class="btn btn-toggle active" id="month-view-btn">Month</button>
-            <button class="btn btn-toggle" id="year-view-btn">Year</button>
+          <div class="todo-input-area">
+            <input type="text" id="todo-input" placeholder="Add a task... press Enter" />
+            <button class="btn btn-primary" id="add-todo-btn">Add</button>
           </div>
-        </div>
-
-        <!-- Calendar Navigation -->
-        <div class="calendar-nav">
-          <button class="btn btn-icon" id="prev-nav" title="Previous">◀</button>
-          <h3 class="calendar-label" id="calendar-label">January 2026</h3>
-          <button class="btn btn-icon" id="next-nav" title="Next">▶</button>
-        </div>
-
-        <!-- Month View -->
-        <div class="calendar-view month-view" id="month-view">
-          <div class="day-headers">
-            <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
-          </div>
-          <div class="days-grid" id="days-grid">
-            <!-- Days rendered by JS -->
-          </div>
-        </div>
-
-        <!-- Year View -->
-        <div class="calendar-view year-view hidden" id="year-view">
-          <div class="year-grid" id="year-grid">
-            <!-- Months rendered by JS -->
-          </div>
-        </div>
-
-        <!-- Day Detail Modal -->
-        <div class="day-detail hidden" id="day-detail">
-          <div class="day-detail-header">
-            <span class="day-detail-date" id="day-detail-date"></span>
-            <button class="btn btn-icon" id="close-day-detail">✕</button>
-          </div>
-          <div class="day-detail-notes" id="day-detail-notes">
-            <p class="empty-state">No notes for this day.</p>
+          <div class="todo-list" id="todo-list"></div>
+          <div class="todo-footer">
+            <span class="todo-stats" id="todo-stats">0 tasks</span>
+            <button class="btn btn-danger" id="clear-completed-btn">Clear done</button>
           </div>
         </div>
       </section>
+
+      <!-- ===== Calendar Tab ===== -->
+      <section class="tab-panel" id="tab-calendar">
+        <div class="panel calendar-panel">
+          <div class="panel-header">
+            <h2 class="panel-title">📅 Calendar</h2>
+            <div class="calendar-view-toggle">
+              <button class="btn btn-toggle active" id="month-view-btn">Month</button>
+              <button class="btn btn-toggle" id="year-view-btn">Year</button>
+            </div>
+          </div>
+          <div class="calendar-nav">
+            <button class="btn btn-icon" id="prev-nav">◀</button>
+            <h3 class="calendar-label" id="calendar-label">January 2026</h3>
+            <button class="btn btn-icon" id="next-nav">▶</button>
+          </div>
+          <div class="calendar-view month-view" id="month-view">
+            <div class="day-headers">
+              <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+            </div>
+            <div class="days-grid" id="days-grid"></div>
+          </div>
+          <div class="calendar-view year-view hidden" id="year-view">
+            <div class="year-grid" id="year-grid"></div>
+          </div>
+          <div class="day-detail hidden" id="day-detail">
+            <div class="day-detail-header">
+              <span class="day-detail-date" id="day-detail-date"></span>
+              <button class="btn btn-icon" id="close-day-detail">✕</button>
+            </div>
+            <div class="day-detail-notes" id="day-detail-notes"></div>
+          </div>
+        </div>
+      </section>
+
     </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav" id="bottom-nav">
+      <button class="nav-btn active" data-tab="notes">
+        <span class="nav-icon">📌</span>
+        <span class="nav-label">Notes</span>
+      </button>
+      <button class="nav-btn" data-tab="todos">
+        <span class="nav-icon">✅</span>
+        <span class="nav-label">Todos</span>
+      </button>
+      <button class="nav-btn" data-tab="calendar">
+        <span class="nav-icon">📅</span>
+        <span class="nav-label">Calendar</span>
+      </button>
+    </nav>
   </div>
 
-  <!-- ===== Note Modal ===== -->
+  <!-- Note Modal -->
   <div class="modal-overlay hidden" id="note-modal">
     <div class="modal">
       <div class="modal-header">

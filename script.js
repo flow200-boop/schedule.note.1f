@@ -1,4 +1,5 @@
 // ===== State =====
+let currentTab = 'notes'; // 'notes' | 'todos' | 'calendar'
 let notes = [];
 let todos = [];
 let todoFilter = 'all'; // 'all' | 'active' | 'completed'
@@ -55,6 +56,32 @@ const todoFilters = $('todo-filters');
 const todoStats = $('todo-stats');
 const clearCompletedBtn = $('clear-completed-btn');
 
+// ===== Tab Switcher =====
+function switchTab(tab) {
+  if (tab === currentTab) return;
+  currentTab = tab;
+
+  // Update panels
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  const panel = document.getElementById(`tab-${tab}`);
+  if (panel) panel.classList.add('active');
+
+  // Update nav buttons
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.querySelector(`[data-tab="${tab}"]`);
+  if (btn) btn.classList.add('active');
+
+  // Refresh content when switching to a tab
+  if (tab === 'calendar') {
+    renderMonth();
+  } else if (tab === 'notes') {
+    renderNotes();
+  } else if (tab === 'todos') {
+    renderTodos();
+    todoInput.focus();
+  }
+}
+
 // ===== Initialization =====
 function init() {
   loadNotes();
@@ -83,6 +110,11 @@ function init() {
 
   notesSearch.addEventListener('input', renderNotes);
   closeDayDetail.addEventListener('click', () => hideDayDetail());
+
+  // Tab navigation
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+  });
 
   // Todos event listeners
   addTodoBtn.addEventListener('click', addTodo);
