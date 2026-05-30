@@ -37,6 +37,32 @@
         </div>
       </section>
 
+      <!-- ===== Todos Panel ===== -->
+      <section class="panel todos-panel">
+        <div class="panel-header">
+          <h2 class="panel-title">✅ Todos</h2>
+          <div class="todo-filters" id="todo-filters">
+            <button class="btn btn-toggle active" data-filter="all">All</button>
+            <button class="btn btn-toggle" data-filter="active">Active</button>
+            <button class="btn btn-toggle" data-filter="completed">Done</button>
+          </div>
+        </div>
+
+        <div class="todo-input-area">
+          <input type="text" id="todo-input" placeholder="Add a task... press Enter" />
+          <button class="btn btn-primary" id="add-todo-btn">Add</button>
+        </div>
+
+        <div class="todo-list" id="todo-list">
+          <!-- Todos rendered by JS -->
+        </div>
+
+        <div class="todo-footer" id="todo-footer">
+          <span class="todo-stats" id="todo-stats">0 tasks</span>
+          <button class="btn btn-danger" id="clear-completed-btn">Clear done</button>
+        </div>
+      </section>
+
       <!-- ===== Calendar Panel ===== -->
       <section class="panel calendar-panel">
         <div class="panel-header">

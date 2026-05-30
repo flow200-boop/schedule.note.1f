@@ -1,5 +1,7 @@
 // ===== State =====
 let notes = [];
+let todos = [];
+let todoFilter = 'all'; // 'all' | 'active' | 'completed'
 let currentView = 'month'; // 'month' | 'year'
 let currentYear = new Date().getFullYear();
 let currentMonth = new Date().getMonth(); // 0-indexed
@@ -45,13 +47,23 @@ const closeModal = $('close-modal');
 
 const todayBadge = $('today-badge');
 
+// ===== Todos DOM =====
+const todoInput = $('todo-input');
+const addTodoBtn = $('add-todo-btn');
+const todoList = $('todo-list');
+const todoFilters = $('todo-filters');
+const todoStats = $('todo-stats');
+const clearCompletedBtn = $('clear-completed-btn');
+
 // ===== Initialization =====
 function init() {
   loadNotes();
+  loadTodos();
   updateTodayBadge();
   renderMonth();
   renderYearView();
   renderNotes();
+  renderTodos();
 
   // Set today's date in the new note form
   noteDate.value = formatDateInput(new Date());
@@ -71,6 +83,20 @@ function init() {
 
   notesSearch.addEventListener('input', renderNotes);
   closeDayDetail.addEventListener('click', () => hideDayDetail());
+
+  // Todos event listeners
+  addTodoBtn.addEventListener('click', addTodo);
+  todoInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') addTodo(); });
+  clearCompletedBtn.addEventListener('click', clearCompleted);
+
+  todoFilters.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-filter]');
+    if (!btn) return;
+    todoFilter = btn.dataset.filter;
+    todoFilters.querySelectorAll('.btn-toggle').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderTodos();
+  });
 
   // Keyboard shortcuts
   document.addEventListener('keydown', (e) => {
@@ -228,6 +254,96 @@ function saveNote() {
     createNote(title, content, date);
   }
   closeModalFn();
+}
+
+// ===== Todos: CRUD =====
+
+function loadTodos() {
+  try {
+    const stored = localStorage.getItem('notes_app_todos');
+    todos = stored ? JSON.parse(stored) : [];
+  } catch {
+    todos = [];
+  }
+}
+
+function saveTodosToStorage() {
+  localStorage.setItem('notes_app_todos', JSON.stringify(todos));
+}
+
+function addTodo() {
+  const text = todoInput.value.trim();
+  if (!text) return;
+
+  const todo = {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5),
+    text: text,
+    completed: false,
+    createdAt: new Date().toISOString()
+  };
+
+  todos.unshift(todo);
+  saveTodosToStorage();
+  todoInput.value = '';
+  todoInput.focus();
+  renderTodos();
+}
+
+function toggleTodo(id) {
+  const todo = todos.find(t => t.id === id);
+  if (!todo) return;
+  todo.completed = !todo.completed;
+  saveTodosToStorage();
+  renderTodos();
+}
+
+function deleteTodo(id) {
+  todos = todos.filter(t => t.id !== id);
+  saveTodosToStorage();
+  renderTodos();
+}
+
+function clearCompleted() {
+  const completed = todos.filter(t => t.completed).length;
+  if (completed === 0) return;
+  if (!confirm(`Delete ${completed} completed task${completed > 1 ? 's' : ''}?`)) return;
+  todos = todos.filter(t => !t.completed);
+  saveTodosToStorage();
+  renderTodos();
+}
+
+function getFilteredTodos() {
+  if (todoFilter === 'active') return todos.filter(t => !t.completed);
+  if (todoFilter === 'completed') return todos.filter(t => t.completed);
+  return todos;
+}
+
+// ===== Todos: Rendering =====
+
+function renderTodos() {
+  const filtered = getFilteredTodos();
+
+  if (todos.length === 0) {
+    todoList.innerHTML = '<div class="todo-empty">No tasks yet. Add one above!</div>';
+  } else if (filtered.length === 0) {
+    const msg = todoFilter === 'active' ? 'No active tasks!' : 'No completed tasks!';
+    todoList.innerHTML = `<div class="todo-empty">${msg}</div>`;
+  } else {
+    todoList.innerHTML = filtered.map(todo => `
+      <div class="todo-item">
+        <input type="checkbox" class="todo-checkbox" ${todo.completed ? 'checked' : ''}
+               onchange="toggleTodo('${todo.id}')" />
+        <span class="todo-text ${todo.completed ? 'completed' : ''}">${escapeHtml(todo.text)}</span>
+        <button class="todo-delete-btn" onclick="deleteTodo('${todo.id}')" title="Delete">✕</button>
+      </div>
+    `).join('');
+  }
+
+  // Update stats
+  const total = todos.length;
+  const completed = todos.filter(t => t.completed).length;
+  const active = total - completed;
+  todoStats.textContent = `${active} active / ${total} total`;
 }
 
 // ===== Calendar: Month View =====
